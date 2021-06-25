@@ -8,12 +8,12 @@ from textwrap import wrap
 import discord
 from discord.ext import commands
 from discord_components import Button, ButtonStyle
-from disputils import BotConfirmation
+from crawler_utilities.utils.confirmation import BotConfirmation
 from datetime import datetime
 
 from models.schedule import ScheduleModel, ScheduleState
 from crawler_utilities.handlers import logger
-from utils.functions import getDateSuffix
+from utils.functions import getDateSuffix, getChannel, getYMD
 
 log = logger.logger
 
@@ -49,7 +49,7 @@ class Schedule(commands.Cog):
 
             if update:
                 embed, components = await self.createScheduleEmbed(scheduleId, schedule['author'], schedule['dateTime'], schedule['desc'], schedule['name'])
-                channel = await self.getChannel(res.guild)
+                channel = await getChannel(self.bot, res.guild)
                 message = await channel.fetch_message(int(schedule['msgId']))
                 await message.edit(embed=embed, components=components)
                 await res.respond(type=6)
@@ -70,7 +70,7 @@ class Schedule(commands.Cog):
         dateTime, datesplit = await self.getStartingTime(date, time)
         id = await self.get_next_schedule_num()
         embed, components = await self.createScheduleEmbed(id, ctx.author.display_name, dateTime, desc, name)
-        channel = await self.getChannel(ctx.message.guild)
+        channel = await getChannel(self.bot, ctx.message.guild)
         msg = await channel.send(embed=embed, components=components)
         await self.bot.mdb['schedule'].insert_one({"id": f"{int(id)}", "msgId": f"{int(msg.id)}", "guildId": f"{int(ctx.guild.id)}", "author": f"{ctx.author}", "name": f"{name}", "desc": f"{desc}", "dateTime": f"{dateTime}", "notified": False})
         await ctx.message.delete()
@@ -106,7 +106,7 @@ class Schedule(commands.Cog):
         else:
             msg = await self.bot.mdb['schedule'].find_one({'id': str(id)})
             if msg is not None:
-                ch = await self.getChannel(ctx)
+                ch = await getChannel(self.bot, ctx)
                 message = await ch.fetch_message(int(msg['msgId']))
                 embed = message.embeds[0]
                 embed.remove_field(0)
@@ -129,7 +129,7 @@ class Schedule(commands.Cog):
                 confirmation = BotConfirmation(ctx, 0x012345)
                 await confirmation.confirm(f"Are you sure you want to cancel {schedule['name']} ({schedule['id']})?")
                 if confirmation.confirmed:
-                    ch = await self.getChannel(ctx.message.guild)
+                    ch = await getChannel(self.bot, ctx.message.guild)
                     await ctx.send(f"{schedule['name']} was canceled.")
                     message = await ch.fetch_message(int(schedule['msgId']))
                     await message.delete()
@@ -155,24 +155,6 @@ class Schedule(commands.Cog):
         await self.waitScheduleMessage(ctx, message, schedule)
 
     # methods
-    async def getChannel(self, guild):
-        guild = await self.bot.mdb['channels'].find_one({"guildId": guild.id})
-        channel = await self.bot.fetch_channel(guild['channelId'])
-        return channel
-
-    async def getYMD(self, dateTime):
-        try:
-            year = dateTime.strftime('%Y')
-            month = dateTime.strftime('%B')
-            day = dateTime.strftime('%d')
-        except AttributeError:
-            split = dateTime.split(" ")
-            dates = split[0].split("-")
-            year = dates[0]
-            month = dates[1]
-            day = dates[2]
-        return day, month, year
-
     async def waitScheduleMessage(self, ctx, message, schedule):
         def check(reply):
             return reply.author == ctx.message.author
@@ -226,7 +208,7 @@ class Schedule(commands.Cog):
             dateTime, datesplit = await self.getStartingTime(schedule.date, schedule.time)
             id = await self.get_next_schedule_num()
             embed, components = await self.createScheduleEmbed(id, schedule.author, dateTime, schedule.desc, schedule.name)
-            channel = await self.getChannel(ctx.message.guild)
+            channel = await getChannel(self.bot, ctx.message.guild)
             msg = await channel.send(embed=msg, components=components)
             upsert = True
 
@@ -243,7 +225,7 @@ class Schedule(commands.Cog):
         embed.colour = random.randint(0, 0xffffff)
         embed.description = f"{desc}"
         embed.add_field(name="Hosted by", value=f"{author}", inline=False)
-        day, month, year = await self.getYMD(dateTime)
+        day, month, year = await getYMD(dateTime)
         daySuffix = getDateSuffix(day)
         try:
             time = dateTime.strftime('%H:%M')

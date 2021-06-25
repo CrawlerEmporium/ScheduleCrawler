@@ -13,5 +13,6 @@ MONGODB = env('MONGODB')
 BOT = 856591849825239090
 PM_TRUE = True
 
+
 def get_server_prefix(self, msg):
     return self.get_prefix(self, msg)[-1]

@@ -1,16 +1,15 @@
 import asyncio
-from os import listdir
-from os.path import isfile, join
-from datetime import datetime, timedelta
-
-from crawler_utilities.utils.functions import fakeField
-from discord.ext import commands
-from discord_components import DiscordComponents
-from crawler_utilities.handlers import logger
-
 import discord
 import motor.motor_asyncio
 import utils.globals as GG
+
+from os import listdir
+from os.path import isfile, join
+from datetime import datetime
+from discord.ext import commands
+from discord_components import DiscordComponents
+from crawler_utilities.handlers import logger
+from utils.functions import createNotificationEmbed
 
 MDB = motor.motor_asyncio.AsyncIOMotorClient(GG.MONGODB)['schedulecrawler']
 
@@ -84,13 +83,11 @@ async def loadScheduler():
     while True:
         schedules = await bot.mdb['schedule'].find({"notified": False}).to_list(length=None)
         for schedule in schedules:
-            print(schedule)
             now = datetime.utcnow()
             dateTime = datetime.fromisoformat(schedule['dateTime'])
             if now.strftime('%D') == dateTime.strftime('%D'):
                 nowM = (int(now.strftime('%H')) * 60) + int(now.strftime('%M'))
                 dateM = (int(dateTime.strftime('%H')) * 60) + int(dateTime.strftime('%M'))
-                print(abs(nowM - dateM))
                 if abs(nowM - dateM) <= 5:
                     channel = await bot.mdb['channels'].find_one({"guildId": int(schedule['guildId'])})
                     ch = bot.get_channel(int(channel['channelId']))
@@ -113,31 +110,7 @@ async def loadScheduler():
                             else:
                                 tentatived.append(f"{user['user']}")
 
-                    embed = discord.Embed()
-                    embed.title = f"Event starting soon: {schedule['name']}"
-                    embed.description = f"{schedule['desc']}"
-                    embed.set_footer(text=f"People that have signed up to either attend, or be tentatively available are shown above.\nTentative people are not pinged.")
-
-                    embed.add_field(name="Hosted by", value=f"{schedule['author']}", inline=False)
-
-                    acceptedString = "**-**"
-                    tentativeString = "**-**"
-
-                    if len(accepted) > 0:
-                        acceptedString = ""
-                        acceptedString += "\n".join(accepted)
-                        if len(acceptedString) > 1024:
-                            acceptedString = f"A lot of people!\n\nUse %schedule people {id} to get a list of all users."
-
-                    if len(tentatived) > 0:
-                        tentativeString = ""
-                        tentativeString += "\n".join(tentatived)
-                        if len(tentativeString) > 1024:
-                            tentativeString = f"A lot of people!\n\nUse %schedule people {id} to get a list of all users."
-
-                    embed.add_field(name="Accepted", value=f"{acceptedString}")
-                    fakeField(embed)
-                    embed.add_field(name="Tentative", value=f"{tentativeString}")
+                    embed = await createNotificationEmbed(schedule, dateTime, accepted, tentatived)
 
                     msg = await ch.send(f"{' '.join(accepted)}", embed=embed)
                     await msg.edit(content='', embed=embed)
@@ -163,9 +136,9 @@ def loadCogs():
             i += 1
     log.info("-------------------")
     log.info("Loading Event Cogs...")
-    for extension in [f.replace('.py', '') for f in listdir(GG.COGSEVENTS) if isfile(join(GG.COGSEVENTS, f))]:
+    for extension in [f.replace('.py', '') for f in listdir("cogsEvents") if isfile(join("cogsEvents", f))]:
         try:
-            bot.load_extension(GG.COGSEVENTS + "." + extension)
+            bot.load_extension("cogsEvents" + "." + extension)
         except Exception as e:
             log.error(f'Failed to load extension {extension}')
             i += 1
@@ -173,11 +146,14 @@ def loadCogs():
         bot.load_extension("crawler_utilities.events.cmdLog", package=".crawler_utilities.events")
     except Exception as e:
         log.error(f'Failed to load extension cmdLog')
+        i += 1
+    try:
+        bot.load_extension("crawler_utilities.events.errors", package=".crawler_utilities.events")
+    except Exception as e:
+        log.error(f'Failed to load extension errors')
+        i += 1
     log.info("-------------------")
-    if i == 0:
-        log.info("Finished Loading All Cogs...")
-    else:
-        log.info(f"Finished Loading Cogs with {i} errors...")
+    log.info("Finished Loading All Cogs...")
 
 
 if __name__ == "__main__":
