@@ -1,3 +1,4 @@
+import motor.motor_asyncio
 from environs import Env
 
 env = Env()
@@ -13,6 +14,7 @@ MONGODB = env('MONGODB')
 BOT = 856591849825239090
 PM_TRUE = True
 
+MDB = motor.motor_asyncio.AsyncIOMotorClient(MONGODB)['schedulecrawler']
 
 def get_server_prefix(self, msg):
     return self.get_prefix(self, msg)[-1]
