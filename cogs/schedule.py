@@ -11,6 +11,7 @@ from discord_components import Button, ButtonStyle
 from crawler_utilities.utils.confirmation import BotConfirmation
 from datetime import datetime
 
+from crawler_utilities.utils.functions import get_next_num
 from models.schedule import ScheduleModel, ScheduleState
 from crawler_utilities.handlers import logger
 from utils.functions import getDateSuffix, getChannel, getYMD
@@ -58,9 +59,12 @@ class Schedule(commands.Cog):
     # commands
     @commands.group(invoke_without_command=True)
     async def schedule(self, ctx, *, message):
+        dbChannel = await self.bot.mdb['channels'].find_one({"guildId": ctx.message.guild.id})
+        if dbChannel is None:
+            return await ctx.send(f"This server lacks a scheduling channel. Ask a staff member to run the ``%schedule channel`` command, to assign a channel to this server.")
         match = re.search(r"name:(.*) desc:(.*) date:(.*) time:(.*)", message)
         if not match:
-            await ctx.send("Correct usage of this command is ``%schedule name:eventName desc:eventDescription date:eventDate time:eventStartTime``")
+            await ctx.send("Correct usage of this command is ``%schedule name:eventName desc:eventDescription date:eventDate time:eventStartTime``\n\nIf you instead want to follow a wizard that leads you through step-by-step, use ``%schedule create``")
             return
         name = match.group(1)
         desc = match.group(2)
@@ -68,7 +72,7 @@ class Schedule(commands.Cog):
         time = match.group(4)
 
         dateTime, datesplit = await self.getStartingTime(date, time)
-        id = await self.get_next_schedule_num()
+        id = await get_next_num(self.bot.mdb['properties'], 'id')
         embed, components = await self.createScheduleEmbed(id, ctx.author.display_name, dateTime, desc, name)
         channel = await getChannel(self.bot, ctx.message.guild)
         msg = await channel.send(embed=embed, components=components)
@@ -79,7 +83,6 @@ class Schedule(commands.Cog):
     async def schedule_channel(self, ctx, channel: typing.Optional[discord.TextChannel] = None):
         if channel is not None:
             dbChannel = await self.bot.mdb['channels'].find_one({"guildId": ctx.message.guild.id, "channelId": channel.id})
-            print(dbChannel)
             if dbChannel is None:
                 await self.bot.mdb['channels'].insert_one({"guildId": ctx.message.guild.id, "channelId": channel.id})
                 await ctx.send(f"<#{channel.id}> was assigned as Scheduling channel.")
@@ -88,23 +91,13 @@ class Schedule(commands.Cog):
         else:
             await ctx.send(f"You need to give me a channel to assign a scheduling channel.")
 
-    @schedule.command(name='author')
-    async def schedule_author(self, ctx, author: typing.Optional[discord.Member] = None):
-        schedule = ScheduleModel()
-        if author is not None:
-            schedule.author = author.display_name
-        await ctx.message.delete()
-        schedule.state = ScheduleState.NAME
-        message = await ctx.send(f"This wizard walks your through the steps of creating a scheduled event. You have 60 seconds per step.\n\nFirst, give me the title for the event.")
-        await self.waitScheduleMessage(ctx, message, schedule)
-
     @schedule.command(name='changeauthor')
     async def schedule_changeauthor(self, ctx, id: int = 0, author: typing.Optional[discord.Member] = None):
         if id == 0:
             await ctx.message.delete()
             return
         else:
-            msg = await self.bot.mdb['schedule'].find_one({'id': str(id)})
+            msg = await self.bot.mdb['schedule'].find_one({'id': int(id), 'guildId': int(ctx.guild.id)})
             if msg is not None:
                 ch = await getChannel(self.bot, ctx)
                 message = await ch.fetch_message(int(msg['msgId']))
@@ -114,8 +107,8 @@ class Schedule(commands.Cog):
                 await message.edit(embed=embed)
                 await ctx.message.delete()
             else:
+                await ctx.send(f"No event found with id: {id}", delete_after=15)
                 await ctx.message.delete()
-                return
 
     @schedule.command(name='cancel')
     async def schedule_cancel(self, ctx, id: int = 0):
@@ -123,7 +116,7 @@ class Schedule(commands.Cog):
             await ctx.message.delete()
             return
         else:
-            schedule = await self.bot.mdb['schedule'].find_one({'id': str(id)})
+            schedule = await self.bot.mdb['schedule'].find_one({'id': int(id), 'guildId': int(ctx.guild.id)})
             if schedule is not None:
                 await ctx.message.delete()
                 confirmation = BotConfirmation(ctx, 0x012345)
@@ -140,11 +133,15 @@ class Schedule(commands.Cog):
                 else:
                     await confirmation.quit()
             else:
+                await ctx.send(f"No event found with id: {id}", delete_after=15)
                 await ctx.message.delete()
-                return
 
     @schedule.command(name='create')
     async def schedule_create(self, ctx):
+        dbChannel = await self.bot.mdb['channels'].find_one({"guildId": ctx.message.guild.id})
+        if dbChannel is None:
+            return await ctx.send(f"This server lacks a scheduling channel. Ask a staff member to run the ``%schedule channel`` command, to assign a channel to this server.")
+
         schedule = ScheduleModel()
         await ctx.message.delete()
         schedule.state = ScheduleState.NAME
@@ -206,7 +203,7 @@ class Schedule(commands.Cog):
         dateTime = None
         try:
             dateTime, datesplit = await self.getStartingTime(schedule.date, schedule.time)
-            id = await self.get_next_schedule_num()
+            id = await get_next_num(self.bot.mdb['properties'], 'id')
             embed, components = await self.createScheduleEmbed(id, schedule.author, dateTime, schedule.desc, schedule.name)
             channel = await getChannel(self.bot, ctx.message.guild)
             msg = await channel.send(embed=msg, components=components)
@@ -271,7 +268,6 @@ class Schedule(commands.Cog):
             if len(tentativeString) > 1024:
                 tentativeString = f"A lot of people!\n\nUse %schedule people {id} to get a list of all users."
 
-
         embed.add_field(name="Accepted", value=f"{acceptedString}")
         embed.add_field(name="Declined", value=f"{declinedString}")
         embed.add_field(name="Tentative", value=f"{tentativeString}")
@@ -284,13 +280,6 @@ class Schedule(commands.Cog):
                        Button(label="Tentative", style=ButtonStyle.blue, custom_id=f"schedule_tentative {id}")]]
 
         return embed, components
-
-    async def get_next_schedule_num(self):
-        reportNum = await self.bot.mdb['properties'].find_one({'key': 'id'})
-        num = reportNum['amount'] + 1
-        reportNum['amount'] += 1
-        await self.bot.mdb['properties'].replace_one({"key": 'id'}, reportNum)
-        return f"{num}"
 
     async def getStartingTime(self, date, time):
         datesplit = date.split('/')

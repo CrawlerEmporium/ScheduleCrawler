@@ -6,11 +6,6 @@ from crawler_utilities.utils.functions import fakeField
 
 log = logging.getLogger(__name__)
 
-
-class SearchException(Exception):
-    pass
-
-
 def getDateSuffix(day):
     day = int(day)
     if 4 <= day <= 20 or 24 <= day <= 30:
