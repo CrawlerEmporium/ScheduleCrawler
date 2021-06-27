@@ -3,7 +3,10 @@ import discord
 import time
 
 from discord.ext import commands
+from discord_components import ButtonStyle, Button
+
 from crawler_utilities.handlers import logger
+from crawler_utilities.utils.embeds import EmbedWithAuthor
 
 log = logger.logger
 
@@ -34,6 +37,41 @@ class Info(commands.Cog):
         em.add_field(name="About",
                      value='A multipurpose bot made by LordDusk#0001.')
         em.set_footer(text=f"ScheduleCrawler {ctx.bot.version} | Powered by discord.py")
+        await ctx.send(embed=em)
+
+    @commands.command()
+    async def support(self, ctx):
+        em = EmbedWithAuthor(ctx)
+        em.title = 'Support Server'
+        em.description = "For technical support for ScheduleCrawler, join the Crawler Emporium discord [here](https://discord.gg/HEY6BWj)!\n" \
+                         "There you can ask questions about the bot, make feature requests, report issues and/or bugs (please include any error messages), learn about my other Crawler bots, and share with other crawler bot users!\n\n" \
+                         "[Check the Website](https://crawleremporium.com) for even more information.\n\n" \
+                         "To add premium features to the bot, [<:Patreon:855754853153505280> Join the Patreon](https://www.patreon.com/LordDusk), or if you'd rather show just appreciation [tip the Developer a <:Kofi:855758703772958751> here](https://ko-fi.com/5ecrawler)."
+        serverEmoji = self.bot.get_emoji(int("<:5e:603932658820448267>".split(":")[2].replace(">", "")))
+        patreonEmoji = self.bot.get_emoji(int("<:Patreon:855754853153505280>".split(":")[2].replace(">", "")))
+        kofiEmoji = self.bot.get_emoji(int("<:Kofi:855758703772958751>".split(":")[2].replace(">", "")))
+        components = [[Button(label="Discord", style=ButtonStyle.URL, emoji=serverEmoji, url="https://discord.gg/HEY6BWj"),
+                       Button(label="Website", style=ButtonStyle.URL, url="https://www.crawleremporium.com"),
+                       Button(label="Patreon", style=ButtonStyle.URL, emoji=patreonEmoji, url="https://www.patreon.com/LordDusk"),
+                       Button(label="Buy me a coffee", style=ButtonStyle.URL, emoji=kofiEmoji, url="https://ko-fi.com/5ecrawler")]]
+        await ctx.send(embed=em, components=components)
+
+    @commands.command()
+    async def invite(self, ctx):
+        em = EmbedWithAuthor(ctx)
+        em.title = 'Invite Me!'
+        em.description = "Hi, you can easily invite me to your own server by following [this link](https://discordapp.com/oauth2/authorize?client_id=856591849825239090&scope=bot&permissions=268774400)!\n\n" \
+                         "Of the 6 permissions asked, 3 are optional and 3 mandatory for optimal usage of the capabilities of the bot.\n\n" \
+                         "" \
+                         "**Mandatory:**\n" \
+                         "__Manage Messages__ - This allows the bot to remove messages from other users.\n" \
+                         "__Manage Roles__ - On initialization it creates a special role, you can remove this permission afterwards.\n" \
+                         "__Send Messages__ - Obvious enough, it needs to be able to send messages, so it can post the events.\n\n" \
+                         "" \
+                         "**Optional:**\n" \
+                         "__View Channels__ - To be able to post to channels, it has to see the channels. But I guess you can take it off.\n" \
+                         "__Read Message History__ - Otherwise it can't react to your commands.\n" \
+                         "__Use External Emojis__ - Some features use emojis that come from the support server.\n"
         await ctx.send(embed=em)
 
 def setup(bot):

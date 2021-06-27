@@ -39,27 +39,6 @@ class Owner(commands.Cog):
 
     @commands.command(hidden=True)
     @commands.is_owner()
-    async def presenceLite(self, ctx):
-        """[OWNER ONLY]"""
-        msqQueue = []
-        msg = '```js\n'
-        msg += '{!s:19s} | {!s:>8s} | {} | {}\n'.format('ID', 'Member', 'Name', 'Owner')
-        for guild in self.bot.guilds:
-            msg += '{!s:19s} | {!s:>8s}| {} | {}\n'.format(guild.id, guild.member_count, guild.name, guild.owner)
-            if len(msg) > 900:
-                msg += '```'
-                msqQueue.append(msg)
-                msg = '```js\n'
-                msg += '{!s:19s} | {!s:>8s} | {} | {}\n'.format('ID', 'Member', 'Name', 'Owner')
-        msg += '```'
-        if len(msqQueue) > 0:
-            for x in msqQueue:
-                await ctx.send(x)
-        else:
-            await ctx.send(msg)
-
-    @commands.command(hidden=True)
-    @commands.is_owner()
     async def load(self, ctx, extension_name: str):
         """[OWNER ONLY]"""
         if ctx.author.id == GG.OWNER:
@@ -77,28 +56,6 @@ class Owner(commands.Cog):
         if ctx.author.id == GG.OWNER:
             ctx.bot.unload_extension(GG.COGS + "." + extension_name)
             await ctx.send("{} unloaded".format(extension_name))
-
-    @commands.command(hidden=True)
-    @commands.is_owner()
-    async def botcheck(self, ctx):
-        """[OWNER ONLY]"""
-        await ctx.send(f"Checking {len(ctx.bot.guilds)} servers for bot collection servers.")
-        for guild in ctx.bot.guilds:
-            bots = sum(1 for m in guild.members if m.bot)
-            members = len(guild.members)
-            ratio = bots / members
-            if ratio >= 0.6 and members >= 20:
-                log.info("Detected bot collection server ({}), ratio {}. Leaving.".format(guild.id, ratio))
-                try:
-                    await guild.owner.send("Please do not add me to bot collection servers. "
-                                           "Your server was flagged for having over 60% bots. "
-                                           "If you believe this is an error, please PM the bot author.")
-                except:
-                    pass
-                await asyncio.sleep(members / 200)
-                await guild.leave()
-        await ctx.bot.change_presence(
-            activity=discord.Game(f"with {len(ctx.bot.guilds)} servers | !help | {ctx.bot.version}"), afk=True)
 
 
 def setup(bot):
