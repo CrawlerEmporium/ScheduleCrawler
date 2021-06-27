@@ -7,6 +7,8 @@ from discord_components import ButtonStyle, Button
 
 from crawler_utilities.handlers import logger
 from crawler_utilities.utils.embeds import EmbedWithAuthor
+from crawler_utilities.utils.functions import try_delete
+from utils import checks
 
 log = logger.logger
 
@@ -73,6 +75,32 @@ class Info(commands.Cog):
                          "__Read Message History__ - Otherwise it can't react to your commands.\n" \
                          "__Use External Emojis__ - Some features use emojis that come from the support server.\n"
         await ctx.send(embed=em)
+
+    @commands.command()
+    @commands.guild_only()
+    @checks.admin_or_permissions(manage_guild=True)
+    async def prefix(self, ctx, prefix: str = None):
+        """Sets the bot's prefix for this server.
+
+        You must have Manage Server permissions or a role called "Bot Admin" to use this command.
+
+        Forgot the prefix? Reset it with "@5eCrawler#2771 prefix !".
+        """
+        await try_delete(ctx)
+        guild_id = str(ctx.guild.id)
+        if prefix is None:
+            current_prefix = await self.bot.get_server_prefix(ctx.message)
+            return await ctx.send(f"My current prefix is: `{current_prefix}`")
+
+        self.bot.prefixes[guild_id] = prefix
+
+        await self.bot.mdb.prefixes.update_one(
+            {"guild_id": guild_id},
+            {"$set": {"prefix": prefix}},
+            upsert=True
+        )
+
+        await ctx.send("Prefix set to `{}` for this server.".format(prefix))
 
 def setup(bot):
     log.info("[Cog] Loading Info...")

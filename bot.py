@@ -19,11 +19,20 @@ defaultPrefix = GG.PREFIX if not TESTING else '*'
 intents = discord.Intents().all()
 
 
-def get_prefix(b, message):
+async def get_prefix(bot, message):
     if not message.guild:
-        return commands.when_mentioned_or(defaultPrefix)(b, message)
-    gp = b.prefixes.get(str(message.guild.id), defaultPrefix)
-    return commands.when_mentioned_or(gp)(b, message)
+        return commands.when_mentioned_or(defaultPrefix)(bot, message)
+    guild_id = str(message.guild.id)
+    if guild_id in bot.prefixes:
+        gp = bot.prefixes.get(guild_id, defaultPrefix)
+    else:  # load from db and cache
+        gp_obj = await bot.mdb.prefixes.find_one({"guild_id": guild_id})
+        if gp_obj is None:
+            gp = defaultPrefix
+        else:
+            gp = gp_obj.get("prefix", defaultPrefix)
+        bot.prefixes[guild_id] = gp
+    return commands.when_mentioned_or(gp)(bot, message)
 
 
 class Crawler(commands.AutoShardedBot):
