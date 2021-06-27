@@ -324,8 +324,8 @@ class ScheduleCog(commands.Cog):
             return await ctx.send(f"This server hasn't initialized me. Ask a staff member to run the ``%schedule initialize`` command, to do so.")
         else:
             if channel is not None:
-
                 await self.bot.mdb['init'].update_one({"guildId": ctx.message.guild.id}, {"$set": {"channelId": channel.id}})
+                await ctx.send(f"<#{channel.id}> was assigned as Scheduling channel.")
             else:
                 await ctx.send(f"You need to give me a channel so I can change it.")
 
@@ -340,6 +340,7 @@ class ScheduleCog(commands.Cog):
         else:
             if role is not None:
                 await self.bot.mdb['init'].update_one({"guildId": ctx.message.guild.id}, {"$set": {"roleId": role.id}})
+                await ctx.send(f"<@&{role.id}> was assuigned as Event Coordination role.")
             else:
                 await ctx.send(f"You need to give me a role so I can change it.")
 
