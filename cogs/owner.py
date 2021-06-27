@@ -11,9 +11,7 @@ from crawler_utilities.handlers import logger
 log = logger.logger
 
 extensions = [x.replace('.py', '') for x in os.listdir(GG.COGS) if x.endswith('.py')]
-extensions5e = [x.replace('.py', '') for x in os.listdir(GG.COGS) if x.endswith('.py')]
 path = GG.COGS + '.'
-path5e = GG.COGS + '.'
 
 
 class Owner(commands.Cog):

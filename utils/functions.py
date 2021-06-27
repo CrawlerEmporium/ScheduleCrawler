@@ -19,7 +19,7 @@ def getDateSuffix(day):
 
 
 async def getChannel(bot, guild):
-    guild = await bot.mdb['channels'].find_one({"guildId": guild.id})
+    guild = await bot.mdb['init'].find_one({"guildId": guild.id})
     channel = await bot.fetch_channel(guild['channelId'])
     return channel
 

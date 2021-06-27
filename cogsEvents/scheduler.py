@@ -58,7 +58,7 @@ async def loadScheduler(bot):
                             await ch.send("I tried deleting the corresponding signup message, but it appears to be already deleted.", delete_after=15)
             except Exception as e:
                 errorLogging = await bot.fetch_channel(bot.error)
-                await errorLogging.send(f"<@95486109852631040> - {schedule.name} Errored - ID: {schedule.id} - Traceback:\n")
+                await errorLogging.send(f"<@95486109852631040> - {schedule.title} Errored - ID: {schedule.id} - Traceback:\n")
                 for o in discord_trim(e):
                     await errorLogging.send(o)
         await asyncio.sleep(60)

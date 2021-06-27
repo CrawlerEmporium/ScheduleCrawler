@@ -63,7 +63,7 @@ bot = Crawler(prefix=get_prefix, intents=intents, case_insensitive=True, status=
 
 @bot.event
 async def on_ready():
-    bot.version = "0.1"
+    bot.version = "1.0"
     DiscordComponents(bot)
     await bot.change_presence(activity=discord.Game(f"with {len(bot.guilds)} servers | %help | v{bot.version}"), afk=True)
     print(f"Logged in as {bot.user.name} ({bot.user.id})")
@@ -83,7 +83,7 @@ async def on_resumed():
 def loadCogs():
     i = 0
     log.info("Loading Cogs...")
-    for extension in [f.replace('.py', '') for f in listdir(GG.COGS) if isfile(join(GG.COGS, f))]:
+    for extension in [f.removesuffix('.py') for f in listdir(GG.COGS) if isfile(join(GG.COGS, f))]:
         try:
             bot.load_extension(GG.COGS + "." + extension)
         except Exception as e:
@@ -91,7 +91,7 @@ def loadCogs():
             i += 1
     log.info("-------------------")
     log.info("Loading Event Cogs...")
-    for extension in [f.replace('.py', '') for f in listdir("cogsEvents") if isfile(join("cogsEvents", f))]:
+    for extension in [f.removesuffix('.py') for f in listdir("cogsEvents") if isfile(join("cogsEvents", f))]:
         try:
             bot.load_extension("cogsEvents" + "." + extension)
         except Exception as e:

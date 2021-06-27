@@ -22,20 +22,20 @@ class Schedule:
     schedules = GG.MDB['schedule']
     signups = GG.MDB['scheduleSignUp']
 
-    def __init__(self, id: int = -1, msgId: int = -1, guildId: int = -1, author: str = "", name: str = "", desc: str = "", notified: bool = False, dateTime: datetime = ""):
+    def __init__(self, id: int = -1, msgId: int = -1, guildId: int = -1, author: str = "", title: str = "", description: str = "", notified: bool = False, dateTime: datetime = ""):
         self.id = id
         self.msgId = msgId
         self.guildId = guildId
         self.author = author
-        self.name = name
-        self.desc = desc
+        self.title = title
+        self.description = description
         self.dateTime = dateTime
         self.notified = notified
         self.state = ScheduleState.NEW
 
     @classmethod
-    async def new(cls, id, msgId, guildId, author, name, desc, dateTime, notified):
-        inst = cls(id, msgId, guildId, author, name, desc, dateTime, notified)
+    async def new(cls, id, msgId, guildId, author, title, description, dateTime, notified):
+        inst = cls(id, msgId, guildId, author, title, description, dateTime, notified)
         return inst
 
     @classmethod
@@ -43,8 +43,8 @@ class Schedule:
         return cls(**schedule_dict)
 
     def to_dict(self):
-        return {"id": self.id, "msgId": self.msgId, "guildId": self.guildId, "author": self.author, "name": self.name,
-                "desc": self.desc, "notified": self.notified, "dateTime": self.dateTime}
+        return {"id": self.id, "msgId": self.msgId, "guildId": self.guildId, "author": self.author, "title": self.title,
+                "description": self.description, "notified": self.notified, "dateTime": self.dateTime}
 
     @classmethod
     async def from_id(cls, id, guildId):
@@ -58,6 +58,9 @@ class Schedule:
         else:
             raise ScheduleException(f"Schedule `{id}` not found.")
 
+    async def commit(self):
+        await self.schedules.replace_one({"id": int(self.id)}, self.to_dict(), upsert=True)
+
     async def accept(self, user):
         await self.signups.update_one({'user': user.id, 'id': self.id}, {"$set": {"type": 1}}, upsert=True)
 
@@ -69,8 +72,8 @@ class Schedule:
 
     async def createNotificationEmbed(self, accepted, tentatived):
         embed = discord.Embed()
-        embed.title = f"Event starting soon: {self.name}"
-        embed.description = f"{self.desc}"
+        embed.title = f"Event starting soon: {self.title}"
+        embed.description = f"{self.description}"
         embed.set_footer(text=f"People that have signed up to either attend, or be tentatively available are shown above.\nTentative people are not pinged.")
         embed.add_field(name="Hosted by", value=f"{self.author}", inline=False)
 
