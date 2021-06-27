@@ -344,6 +344,44 @@ class ScheduleCog(commands.Cog):
             else:
                 await ctx.send(f"You need to give me a role so I can change it.")
 
+    @schedule.command(name='people')
+    @commands.guild_only()
+    @checks.is_coordinator()
+    async def schedule_people(self, ctx, id: int = 0):
+        await try_delete(ctx.message)
+        if id == 0:
+            await ctx.reply("You need to give me a schedule id.")
+            return await try_delete(ctx.message)
+        else:
+            schedule = await Schedule.from_id(id, ctx.guild.id)
+            users = await self.bot.mdb['scheduleSignUp'].find({'id': schedule.id}).to_list(length=None)
+            accepted = []
+            declines = []
+            tentative = []
+            for x in users:
+                user = await self.bot.fetch_user(int(x['user']))
+                if x['type'] == 1:
+                    accepted.append(user.display_name)
+                if x['type'] == -1:
+                    declines.append(user.display_name)
+                if x['type'] == 0:
+                    tentative.append(user.display_name)
+
+            if len(accepted) > 0:
+                acceptedString = ""
+                acceptedString += "\n".join(accepted)
+                await ctx.send(f"People who have accepted {schedule.title} ({schedule.id}):\n{acceptedString}", delete_after=15)
+
+            if len(declines) > 0:
+                declinedString = ""
+                declinedString += "\n".join(declines)
+                await ctx.send(f"People who have declined {schedule.title} ({schedule.id}):\n{declinedString}", delete_after=15)
+
+            if len(tentative) > 0:
+                tentativeString = ""
+                tentativeString += "\n".join(tentative)
+                await ctx.send(f"People who have accepted tentatively {schedule.title} ({schedule.id}):\n{tentativeString}", delete_after=15)
+
     # methods
     async def waitScheduleMessage(self, ctx, message, schedule, date, time):
         def check(reply):
