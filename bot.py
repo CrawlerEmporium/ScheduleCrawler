@@ -7,8 +7,7 @@ from os.path import isfile, join
 
 from discord.ext import commands
 from discord_components import DiscordComponents
-from crawler_utilities.handlers import logger
-
+from crawler_utilities.handlers import logger, Help
 
 MDB = motor.motor_asyncio.AsyncIOMotorClient(GG.MONGODB)['schedulecrawler']
 
@@ -58,7 +57,8 @@ class Crawler(commands.AutoShardedBot):
 
 bot = Crawler(prefix=get_prefix, intents=intents, case_insensitive=True, status=discord.Status.idle,
               description="A bot.", shard_count=SHARD_COUNT, testing=TESTING,
-              activity=discord.Game(f"%help | Initializing..."))
+              activity=discord.Game(f"%help | Initializing..."),
+              help_command=Help("schedule"))
 
 
 @bot.event
