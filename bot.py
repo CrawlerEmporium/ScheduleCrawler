@@ -72,7 +72,7 @@ bot = Crawler(prefix=get_prefix, intents=intents, case_insensitive=True, status=
 
 @bot.event
 async def on_ready():
-    bot.version = "1.0"
+    bot.version = "1.0.1"
     DiscordComponents(bot)
     await bot.change_presence(activity=discord.Game(f"with {len(bot.guilds)} servers | %help | v{bot.version}"), afk=True)
     print(f"Logged in as {bot.user.name} ({bot.user.id})")

@@ -112,14 +112,20 @@ class ScheduleCog(commands.Cog):
             try:
                 await try_delete(ctx.message)
                 schedule = await Schedule.from_id(int(id), int(ctx.guild.id))
-                ch = await getChannel(self.bot, ctx.guild)
-                message = await ch.fetch_message(schedule.msgId)
-                embed = message.embeds[0]
-                embed.remove_field(0)
-                embed.insert_field_at(0, name='Hosted by', value=f'{author.display_name}', inline=False)
-                await message.edit(embed=embed)
-                schedule.author = author.display_name
-                await schedule.commit()
+
+                result = schedule.change(ctx, schedule.author, author.display_name)
+                if result:
+                    ch = await getChannel(self.bot, ctx.guild)
+                    message = await ch.fetch_message(schedule.msgId)
+                    embed = message.embeds[0]
+                    embed.remove_field(0)
+                    embed.insert_field_at(0, name='Hosted by', value=f'{author.display_name}', inline=False)
+                    await message.edit(embed=embed)
+                    schedule.author = author.display_name
+                    await schedule.commit()
+                else:
+                    return
+
             except ScheduleException as e:
                 await ctx.send(e)
 
@@ -137,14 +143,19 @@ class ScheduleCog(commands.Cog):
             try:
                 await try_delete(ctx.message)
                 schedule = await Schedule.from_id(int(id), int(ctx.guild.id))
-                ch = await getChannel(self.bot, ctx.guild)
-                message = await ch.fetch_message(schedule.msgId)
-                embed = message.embeds[0]
-                embed.title = title
-                await message.edit(embed=embed)
 
-                schedule.title = title
-                await schedule.commit()
+                result = schedule.change(ctx, schedule.title, title)
+                if result:
+                    ch = await getChannel(self.bot, ctx.guild)
+                    message = await ch.fetch_message(schedule.msgId)
+                    embed = message.embeds[0]
+                    embed.title = title
+                    await message.edit(embed=embed)
+                    schedule.title = title
+                    await schedule.commit()
+                else:
+                    return
+
             except ScheduleException as e:
                 await ctx.send(e)
 
@@ -162,14 +173,19 @@ class ScheduleCog(commands.Cog):
             try:
                 await try_delete(ctx.message)
                 schedule = await Schedule.from_id(int(id), int(ctx.guild.id))
-                ch = await getChannel(self.bot, ctx.guild)
-                message = await ch.fetch_message(schedule.msgId)
-                embed = message.embeds[0]
-                embed.description = desc
-                await message.edit(embed=embed)
 
-                schedule.description = desc
-                await schedule.commit()
+                result = schedule.change(ctx, schedule.description, desc)
+                if result:
+                    ch = await getChannel(self.bot, ctx.guild)
+                    message = await ch.fetch_message(schedule.msgId)
+                    embed = message.embeds[0]
+                    embed.description = desc
+                    await message.edit(embed=embed)
+                    schedule.description = desc
+                    await schedule.commit()
+                else:
+                    return
+
             except ScheduleException as e:
                 await ctx.send(e)
 
@@ -196,15 +212,20 @@ class ScheduleCog(commands.Cog):
                     daySuffix = getDateSuffix(day)
                     time = convertedDateTime.strftime('%H:%M')
 
-                    ch = await getChannel(self.bot, ctx.guild)
-                    message = await ch.fetch_message(schedule.msgId)
-                    embed = message.embeds[0]
-                    embed.remove_field(1)
-                    embed.insert_field_at(1, name="When? (UTC)", value=f"{month} {day}{daySuffix}, {year} {time}", inline=False)
+                    result = schedule.change(ctx, schedule.dateTime.strftime('%d/%m/%Y'), date)
+                    if result:
+                        ch = await getChannel(self.bot, ctx.guild)
+                        message = await ch.fetch_message(schedule.msgId)
+                        embed = message.embeds[0]
+                        embed.remove_field(1)
+                        embed.insert_field_at(1, name="When? (UTC)", value=f"{month} {day}{daySuffix}, {year} {time}", inline=False)
 
-                    await message.edit(embed=embed)
-                    schedule.dateTime = convertedDateTime
-                    await schedule.commit()
+                        await message.edit(embed=embed)
+                        schedule.dateTime = convertedDateTime
+                        await schedule.commit()
+                    else:
+                        return
+
                 except ScheduleException as e:
                     await ctx.send(e)
             else:
@@ -231,17 +252,22 @@ class ScheduleCog(commands.Cog):
 
                     day, month, year = await getYMD(convertedDateTime)
                     daySuffix = getDateSuffix(day)
-                    time = convertedDateTime.strftime('%H:%M')
+                    newTime = convertedDateTime.strftime('%H:%M')
 
-                    ch = await getChannel(self.bot, ctx.guild)
-                    message = await ch.fetch_message(schedule.msgId)
-                    embed = message.embeds[0]
-                    embed.remove_field(1)
-                    embed.insert_field_at(1, name="When? (UTC)", value=f"{month} {day}{daySuffix}, {year} {time}", inline=False)
+                    result = schedule.change(ctx, schedule.dateTime.strftime('%H%M'), newTime)
+                    if result:
+                        ch = await getChannel(self.bot, ctx.guild)
+                        message = await ch.fetch_message(schedule.msgId)
+                        embed = message.embeds[0]
+                        embed.remove_field(1)
+                        embed.insert_field_at(1, name="When? (UTC)", value=f"{month} {day}{daySuffix}, {year} {newTime}", inline=False)
 
-                    await message.edit(embed=embed)
-                    schedule.dateTime = convertedDateTime
-                    await schedule.commit()
+                        await message.edit(embed=embed)
+                        schedule.dateTime = convertedDateTime
+                        await schedule.commit()
+                    else:
+                        return
+
                 except ScheduleException as e:
                     await ctx.send(e)
             else:
@@ -402,7 +428,7 @@ class ScheduleCog(commands.Cog):
             elif schedule.state == ScheduleState.DESC:
                 reply = await ctx.bot.wait_for('message', timeout=120.0, check=check)
                 schedule.state = ScheduleState.DATE
-                await message.edit(content=f"This time I require the date of the event. This should be in the ``DD/MM/YYYY`` format, for example ``23/08/2019``\nNote the `/` between day, month, and year.\n\n" 
+                await message.edit(content=f"This time I require the date of the event. This should be in the ``DD/MM/YYYY`` format, for example ``23/08/2019``\nNote the `/` between day, month, and year.\n\n"
                                            f"Be advised that all times in the bot are linked to UTC+0, so convert the time you want to UTC.\n"
                                            f"A cool converter can be found here: https://savvytime.com/converter/utc")
                 schedule.description = reply.content
@@ -412,7 +438,7 @@ class ScheduleCog(commands.Cog):
             elif schedule.state == ScheduleState.DATE:
                 reply = await ctx.bot.wait_for('message', timeout=120.0, check=check)
                 schedule.state = ScheduleState.TIME
-                await message.edit(content=f"Now I want the starting time of the event. This is in the 24 hour military notation so anything from 0000 to 2359 will work.\n**Don't** use `:` just use the 4 digits.\n\n" 
+                await message.edit(content=f"Now I want the starting time of the event. This is in the 24 hour military notation so anything from 0000 to 2359 will work.\n**Don't** use `:` just use the 4 digits.\n\n"
                                            f"Be advised that all times in the bot are linked to UTC+0, so convert the time you want to UTC.\n"
                                            f"A cool converter can be found here: https://savvytime.com/converter/utc")
                 date = reply.content

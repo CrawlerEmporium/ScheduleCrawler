@@ -1,12 +1,14 @@
+import asyncio
 import datetime
 from enum import Enum
 
 import discord
 
+from crawler_utilities.utils.confirmation import BotConfirmation
 from crawler_utilities.utils.functions import fakeField
 
 import utils.globals as GG
-from utils.functions import getYMD, getDateSuffix
+from utils.functions import getYMD, getDateSuffix, getChannel
 
 
 class ScheduleState(Enum):
@@ -57,6 +59,17 @@ class Schedule:
                 raise ScheduleException(f"Schedule `{id}` not found.")
         else:
             raise ScheduleException(f"Schedule `{id}` not found.")
+
+    async def change(self, ctx, oldValue, newValue):
+        confirmation = BotConfirmation(ctx, 0x012345)
+        await confirmation.confirm(f"You are about to make changes to {self.title} ({self.id})\n\n"
+                                   f"Are you sure you want to change ``{oldValue}`` into ``{newValue}``?")
+        if confirmation.confirmed:
+            await ctx.send(f"Confirmed! {self.title} will be changed.", delete_after=5)
+            return True
+        else:
+            await confirmation.quit()
+            return False
 
     async def commit(self):
         await self.schedules.replace_one({"id": int(self.id)}, self.to_dict(), upsert=True)
