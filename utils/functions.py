@@ -35,4 +35,5 @@ async def convertDateAndTimeToDateTime(date, time):
     timewarp = wrap(time, 2)
     datestring += f" {timewarp[0]}:{timewarp[1]}"
     dateTime = datetime.strptime(datestring, '%Y-%m-%d %H:%M')
+    dateTime = dateTime.replace(tzinfo=pytz.utc)
     return dateTime

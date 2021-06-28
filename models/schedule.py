@@ -1,14 +1,11 @@
-import asyncio
 import datetime
-from enum import Enum
-
+import time
 import discord
 
+from enum import Enum
 from crawler_utilities.utils.confirmation import BotConfirmation
 from crawler_utilities.utils.functions import fakeField
-
 import utils.globals as GG
-from utils.functions import getYMD, getDateSuffix, getChannel
 
 
 class ScheduleState(Enum):
@@ -24,7 +21,7 @@ class Schedule:
     schedules = GG.MDB['schedule']
     signups = GG.MDB['scheduleSignUp']
 
-    def __init__(self, id: int = -1, msgId: int = -1, guildId: int = -1, author: str = "", title: str = "", description: str = "", notified: bool = False, dateTime: datetime = ""):
+    def __init__(self, id: int = -1, msgId: int = -1, guildId: int = -1, author: str = "", title: str = "", description: str = "", notified: bool = False, dateTime: datetime = None):
         self.id = id
         self.msgId = msgId
         self.guildId = guildId
@@ -90,11 +87,8 @@ class Schedule:
         embed.description = f"{self.description}"
         embed.set_footer(text=f"People that have signed up to either attend, or be tentatively available are shown above.\nTentative people are not pinged.")
         embed.add_field(name="Hosted by", value=f"{self.author}", inline=False)
-
-        day, month, year = await getYMD(self.dateTime)
-        daySuffix = getDateSuffix(day)
-        time = self.dateTime.strftime('%H:%M')
-        embed.add_field(name="When? (UTC)", value=f"{month} {day}{daySuffix}, {year} {time}", inline=False)
+        unix = time.mktime(self.dateTime.timetuple())
+        embed.insert_field_at(1, name="When?", value=f"<t:{str(unix).removesuffix('.0')}>", inline=False)
 
         acceptedString = "**-**"
         if len(accepted) > 0:
