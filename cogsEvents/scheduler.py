@@ -59,8 +59,9 @@ async def loadScheduler(bot):
             except Exception as e:
                 errorLogging = await bot.fetch_channel(bot.error)
                 await errorLogging.send(f"<@95486109852631040> - {schedule.title} Errored - ID: {schedule.id} - Traceback:\n")
-                for o in discord_trim(e):
-                    await errorLogging.send(o)
+                tb = discord_trim(e)
+                for x in tb:
+                    await errorLogging.send(x)
         await asyncio.sleep(60)
 
 

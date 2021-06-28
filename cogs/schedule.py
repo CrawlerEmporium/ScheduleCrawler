@@ -67,7 +67,10 @@ class ScheduleCog(commands.Cog):
                 return await ctx.send(f"This server lacks a scheduling channel. Ask a staff member to run the ``%schedule initialize`` command, to assign a channel to this server.")
             match = re.search(r"title:(.*) desc:(.*) date:(.*) time:(.*)", message)
             if not match:
-                await ctx.send("Correct usage of this command is ``%schedule title:eventTitle desc:eventDescription date:DD/MM/YYYY time:0000-2359``\n\nIf you instead want to follow a wizard that leads you through step-by-step, use ``%schedule create``")
+                await ctx.send("Correct usage of this command is ``%schedule title:eventTitle desc:eventDescription date:DD/MM/YYYY time:0000-2359``\n"
+                               "Be advised that all times in the bot are linked to UTC+0, so convert the time you want to UTC.\n"
+                               "A cool converter can be found here: https://savvytime.com/converter/utc\n\n"
+                               "If you instead want to follow a wizard that leads you through step-by-step, use ``%schedule create``")
                 return
 
             dateMatch = re.match(r'(([0-9]{2})\/([0-9]{2})\/([0-9]{4}))', match.group(3))
@@ -399,7 +402,9 @@ class ScheduleCog(commands.Cog):
             elif schedule.state == ScheduleState.DESC:
                 reply = await ctx.bot.wait_for('message', timeout=120.0, check=check)
                 schedule.state = ScheduleState.DATE
-                await message.edit(content=f"This time I require the date of the event. This should be in the ``DD/MM/YYYY`` format, for example ``23/08/2019``\nNote the `/` between day, month, and year.")
+                await message.edit(content=f"This time I require the date of the event. This should be in the ``DD/MM/YYYY`` format, for example ``23/08/2019``\nNote the `/` between day, month, and year.\n\n" 
+                                           f"Be advised that all times in the bot are linked to UTC+0, so convert the time you want to UTC.\n"
+                                           f"A cool converter can be found here: https://savvytime.com/converter/utc")
                 schedule.description = reply.content
                 await reply.delete()
                 await self.waitScheduleMessage(ctx, message, schedule, date, time)
@@ -407,7 +412,9 @@ class ScheduleCog(commands.Cog):
             elif schedule.state == ScheduleState.DATE:
                 reply = await ctx.bot.wait_for('message', timeout=120.0, check=check)
                 schedule.state = ScheduleState.TIME
-                await message.edit(content=f"Now I want the starting time of the event. This is in the 24 hour military notation so anything from 0000 to 2359 will work.\n**Don't** use `:` just use the 4 digits.")
+                await message.edit(content=f"Now I want the starting time of the event. This is in the 24 hour military notation so anything from 0000 to 2359 will work.\n**Don't** use `:` just use the 4 digits.\n\n" 
+                                           f"Be advised that all times in the bot are linked to UTC+0, so convert the time you want to UTC.\n"
+                                           f"A cool converter can be found here: https://savvytime.com/converter/utc")
                 date = reply.content
                 await reply.delete()
                 await self.waitScheduleMessage(ctx, message, schedule, date, time)
