@@ -2,9 +2,7 @@ import logging
 import datetime
 from textwrap import wrap
 from datetime import datetime
-
-import discord
-from crawler_utilities.utils.functions import fakeField
+import pytz
 
 log = logging.getLogger(__name__)
 

@@ -240,22 +240,22 @@ class ScheduleCog(commands.Cog):
     @schedule.command(name='time')
     @commands.guild_only()
     @checks.is_coordinator()
-    async def schedule_time(self, ctx, id: int = 0, time: str = ""):
+    async def schedule_time(self, ctx, id: int = 0, newTime: str = ""):
         if id == 0:
             await ctx.reply("You need to give me a schedule id.")
             return await try_delete(ctx.message)
-        if time == "":
+        if newTime == "":
             await ctx.reply("Without a time, I can't change the title for the event.")
             return await try_delete(ctx.message)
         else:
-            match = re.match(r'([0-9]{4})', time)
+            match = re.match(r'([0-9]{4})', newTime)
             if match is not None:
                 try:
                     await try_delete(ctx.message)
                     schedule = await Schedule.from_id(int(id), int(ctx.guild.id))
-                    convertedDateTime = await convertDateAndTimeToDateTime(schedule.dateTime.strftime('%d/%m/%Y'), time)
+                    convertedDateTime = await convertDateAndTimeToDateTime(schedule.dateTime.strftime('%d/%m/%Y'), newTime)
 
-                    result = await schedule.change(ctx, schedule.dateTime.strftime('%H%M'), time)
+                    result = await schedule.change(ctx, schedule.dateTime.strftime('%H%M'), newTime)
                     if result:
                         ch = await getChannel(self.bot, ctx.guild)
                         message = await ch.fetch_message(schedule.msgId)

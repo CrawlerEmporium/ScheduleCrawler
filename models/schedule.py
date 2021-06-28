@@ -66,6 +66,7 @@ class Schedule:
                                    f"Are you sure you want to change ``{oldValue}`` into ``{newValue}``?")
         if confirmation.confirmed:
             await ctx.send(f"Confirmed! {self.title} will be changed.", delete_after=5)
+            await confirmation.quit()
             return True
         else:
             await confirmation.quit()
