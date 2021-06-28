@@ -4,7 +4,7 @@ import typing
 import discord
 import time
 
-from datetime import datetime
+from datetime import datetime, timezone
 from discord.ext import commands
 from discord_components import Button, ButtonStyle
 from crawler_utilities.utils.confirmation import BotConfirmation
@@ -211,18 +211,19 @@ class ScheduleCog(commands.Cog):
                     await try_delete(ctx.message)
                     schedule = await Schedule.from_id(int(id), int(ctx.guild.id))
 
-                    convertedDateTime = await convertDateAndTimeToDateTime(date, schedule.dateTime.strftime('%H%M'))
+                    convertedDateTime = await convertDateAndTimeToDateTime(date, datetime.fromisoformat(schedule.dateTime).strftime('%H%M'))
                     now = datetime.utcnow()
                     if convertedDateTime < now:
                         return await ctx.send("You have just tried to update this event to a point in the past. Which is not possible.\nCheck that your date is in a ``DD/MM/YYYY format``, for example ``23/08/2019``")
 
-                    result = await schedule.change(ctx, schedule.dateTime.strftime('%d/%m/%Y'), date)
+                    result = await schedule.change(ctx, datetime.fromisoformat(schedule.dateTime).strftime('%d/%m/%Y'), date)
                     if result:
                         ch = await getChannel(self.bot, ctx.guild)
                         message = await ch.fetch_message(schedule.msgId)
                         embed = message.embeds[0]
                         embed.remove_field(1)
-                        unix = time.mktime(convertedDateTime.timetuple())
+
+                        unix = convertedDateTime.replace(tzinfo=timezone.utc).timestamp()
                         embed.insert_field_at(1, name="When?", value=f"<t:{str(unix).removesuffix('.0')}>", inline=False)
 
                         await message.edit(embed=embed)
@@ -253,15 +254,16 @@ class ScheduleCog(commands.Cog):
                 try:
                     await try_delete(ctx.message)
                     schedule = await Schedule.from_id(int(id), int(ctx.guild.id))
-                    convertedDateTime = await convertDateAndTimeToDateTime(schedule.dateTime.strftime('%d/%m/%Y'), newTime)
+                    convertedDateTime = await convertDateAndTimeToDateTime(datetime.fromisoformat(schedule.dateTime).strftime('%d/%m/%Y'), newTime)
 
-                    result = await schedule.change(ctx, schedule.dateTime.strftime('%H%M'), newTime)
+                    result = await schedule.change(ctx, datetime.fromisoformat(schedule.dateTime).strftime('%H%M'), newTime)
                     if result:
                         ch = await getChannel(self.bot, ctx.guild)
                         message = await ch.fetch_message(schedule.msgId)
                         embed = message.embeds[0]
                         embed.remove_field(1)
-                        unix = time.mktime(convertedDateTime.timetuple())
+
+                        unix = convertedDateTime.replace(tzinfo=timezone.utc).timestamp()
                         embed.insert_field_at(1, name="When?", value=f"<t:{str(unix).removesuffix('.0')}>", inline=False)
 
                         await message.edit(embed=embed)
@@ -471,7 +473,7 @@ class ScheduleCog(commands.Cog):
                 return await ctx.send("You have just tried to create an event in the past. Which is not possible.\nCheck that your date is in a ``DD/MM/YYYY format``, for example ``23/08/2019``")
             id = await get_next_num(self.bot.mdb['properties'], 'id')
             schedule.id = int(id)
-            schedule.dateTime = convertedDateTime
+            schedule.dateTime = str(convertedDateTime)
 
             embed, components = await self.createScheduleEmbed(schedule)
             channel = await getChannel(self.bot, ctx.message.guild)
@@ -491,7 +493,9 @@ class ScheduleCog(commands.Cog):
         embed.title = f"{schedule.title}"
         embed.description = f"{schedule.description}"
         embed.add_field(name="Hosted by", value=f"{schedule.author}", inline=False)
-        unix = time.mktime(schedule.dateTime.timetuple())
+
+        DT = datetime.fromisoformat(schedule.dateTime)
+        unix = DT.replace(tzinfo=timezone.utc).timestamp()
         embed.insert_field_at(1, name="When?", value=f"<t:{str(unix).removesuffix('.0')}>", inline=False)
 
         users = await self.bot.mdb['scheduleSignUp'].find({'id': schedule.id}).to_list(length=None)
@@ -534,7 +538,7 @@ class ScheduleCog(commands.Cog):
         embed.add_field(name="Tentative", value=f"{tentativeString}")
 
         embed.set_footer(text=f"Id: {schedule.id} • When? (local time)")
-        embed.timestamp = schedule.dateTime
+        embed.timestamp = DT
 
         components = [[Button(label="Accept", style=ButtonStyle.green, custom_id=f"schedule_accept {schedule.id}"),
                        Button(label="Decline", style=ButtonStyle.red, custom_id=f"schedule_decline {schedule.id}"),

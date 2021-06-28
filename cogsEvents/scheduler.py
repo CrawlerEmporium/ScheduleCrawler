@@ -19,9 +19,10 @@ async def loadScheduler(bot):
             schedule = await Schedule.from_id(schedule['id'], schedule['guildId'])
             try:
                 now = datetime.utcnow()
-                if now.strftime('%D') == schedule.dateTime.strftime('%D'):
+                dateTime = datetime.fromisoformat(schedule.dateTime)
+                if now.strftime('%D') == dateTime.strftime('%D'):
                     nowM = (int(now.strftime('%H')) * 60) + int(now.strftime('%M'))
-                    dateM = (int(schedule.dateTime.strftime('%H')) * 60) + int(schedule.dateTime.strftime('%M'))
+                    dateM = (int(dateTime.strftime('%H')) * 60) + int(dateTime.strftime('%M'))
                     if abs(nowM - dateM) <= 5:
                         channel = await bot.mdb['channels'].find_one({"guildId": schedule.guildId})
                         ch = bot.get_channel(int(channel['channelId']))

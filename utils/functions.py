@@ -1,8 +1,7 @@
 import logging
 import datetime
 from textwrap import wrap
-from datetime import datetime
-import pytz
+from datetime import datetime, timezone
 
 log = logging.getLogger(__name__)
 
@@ -29,14 +28,10 @@ async def getYMD(dateTime):
     return day, month, year
 
 
-async def convertDateAndTimeToDateTime(date, time):
+async def convertDateAndTimeToDateTime(date, newTime):
     datesplit = date.split('/')
     datestring = f"{datesplit[2]}-{datesplit[1]}-{datesplit[0]}"
-    timewarp = wrap(time, 2)
+    timewarp = wrap(newTime, 2)
     datestring += f" {timewarp[0]}:{timewarp[1]}"
-    dateTime = datetime.strptime(datestring, '%Y-%m-%d %H:%M')
-    tz = pytz.timezone('EST5EDT')
-    dateTime = dateTime.replace(tzinfo=tz)
-    print(dateTime)
-    print(datetime.utcnow())
-    return dateTime
+    DT = datetime.strptime(f"{datestring}", '%Y-%m-%d %H:%M')
+    return DT

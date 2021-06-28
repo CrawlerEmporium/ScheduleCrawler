@@ -1,3 +1,4 @@
+import asyncio
 import datetime
 import time
 import discord
@@ -21,7 +22,7 @@ class Schedule:
     schedules = GG.MDB['schedule']
     signups = GG.MDB['scheduleSignUp']
 
-    def __init__(self, id: int = -1, msgId: int = -1, guildId: int = -1, author: str = "", title: str = "", description: str = "", notified: bool = False, dateTime: datetime = None):
+    def __init__(self, id: int = -1, msgId: int = -1, guildId: int = -1, author: str = "", title: str = "", description: str = "", notified: bool = False, dateTime: str = ""):
         self.id = id
         self.msgId = msgId
         self.guildId = guildId
@@ -43,7 +44,7 @@ class Schedule:
 
     def to_dict(self):
         return {"id": self.id, "msgId": self.msgId, "guildId": self.guildId, "author": self.author, "title": self.title,
-                "description": self.description, "notified": self.notified, "dateTime": self.dateTime}
+                "description": self.description, "notified": self.notified, "dateTime": f"{self.dateTime}"}
 
     @classmethod
     async def from_id(cls, id, guildId):
@@ -62,7 +63,8 @@ class Schedule:
         await confirmation.confirm(f"You are about to make changes to {self.title} ({self.id})\n\n"
                                    f"Are you sure you want to change ``{oldValue}`` into ``{newValue}``?")
         if confirmation.confirmed:
-            await ctx.send(f"Confirmed! {self.title} will be changed.", delete_after=5)
+            await confirmation.update(f"Confirmed! {self.title} will be changed.", color=0x55ff55)
+            await asyncio.sleep(5)
             await confirmation.quit()
             return True
         else:
@@ -87,7 +89,8 @@ class Schedule:
         embed.description = f"{self.description}"
         embed.set_footer(text=f"People that have signed up to either attend, or be tentatively available are shown above.\nTentative people are not pinged.")
         embed.add_field(name="Hosted by", value=f"{self.author}", inline=False)
-        unix = time.mktime(self.dateTime.timetuple())
+        DT = datetime.datetime.fromisoformat(self.dateTime)
+        unix = DT.replace(tzinfo=datetime.timezone.utc).timestamp()
         embed.insert_field_at(1, name="When?", value=f"<t:{str(unix).removesuffix('.0')}>", inline=False)
 
         acceptedString = "**-**"
