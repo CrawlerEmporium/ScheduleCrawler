@@ -223,7 +223,7 @@ class ScheduleCog(commands.Cog):
                         embed = message.embeds[0]
                         embed.remove_field(1)
                         unix = time.mktime(convertedDateTime.timetuple())
-                        embed.insert_field_at(1, name="When?", value=f"<t:{unix}>", inline=False)
+                        embed.insert_field_at(1, name="When?", value=f"<t:{unix.removesuffix('.0')}>", inline=False)
 
                         await message.edit(embed=embed)
                         schedule.dateTime = convertedDateTime
@@ -262,7 +262,7 @@ class ScheduleCog(commands.Cog):
                         embed = message.embeds[0]
                         embed.remove_field(1)
                         unix = time.mktime(convertedDateTime.timetuple())
-                        embed.insert_field_at(1, name="When?", value=f"<t:{unix}>", inline=False)
+                        embed.insert_field_at(1, name="When?", value=f"<t:{unix.removesuffix('.0')}>", inline=False)
 
                         await message.edit(embed=embed)
                         schedule.dateTime = convertedDateTime
@@ -492,7 +492,7 @@ class ScheduleCog(commands.Cog):
         embed.description = f"{schedule.description}"
         embed.add_field(name="Hosted by", value=f"{schedule.author}", inline=False)
         unix = time.mktime(schedule.dateTime.timetuple())
-        embed.insert_field_at(1, name="When?", value=f"<t:{unix}>", inline=False)
+        embed.insert_field_at(1, name="When?", value=f"<t:{unix.removesuffix('.0')}>", inline=False)
 
         users = await self.bot.mdb['scheduleSignUp'].find({'id': schedule.id}).to_list(length=None)
         accepted = []
