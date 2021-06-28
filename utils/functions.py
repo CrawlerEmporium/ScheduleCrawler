@@ -35,5 +35,8 @@ async def convertDateAndTimeToDateTime(date, time):
     timewarp = wrap(time, 2)
     datestring += f" {timewarp[0]}:{timewarp[1]}"
     dateTime = datetime.strptime(datestring, '%Y-%m-%d %H:%M')
-    dateTime = dateTime.replace(tzinfo=pytz.utc)
+    tz = pytz.timezone('EST5EDT')
+    dateTime = dateTime.replace(tzinfo=tz)
+    print(dateTime)
+    print(datetime.utcnow())
     return dateTime
