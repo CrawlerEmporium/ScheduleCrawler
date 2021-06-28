@@ -118,7 +118,7 @@ class ScheduleCog(commands.Cog):
                 await try_delete(ctx.message)
                 schedule = await Schedule.from_id(int(id), int(ctx.guild.id))
 
-                result = schedule.change(ctx, schedule.author, author.display_name)
+                result = await schedule.change(ctx, schedule.author, author.display_name)
                 if result:
                     ch = await getChannel(self.bot, ctx.guild)
                     message = await ch.fetch_message(schedule.msgId)
@@ -149,7 +149,7 @@ class ScheduleCog(commands.Cog):
                 await try_delete(ctx.message)
                 schedule = await Schedule.from_id(int(id), int(ctx.guild.id))
 
-                result = schedule.change(ctx, schedule.title, title)
+                result = await schedule.change(ctx, schedule.title, title)
                 if result:
                     ch = await getChannel(self.bot, ctx.guild)
                     message = await ch.fetch_message(schedule.msgId)
@@ -179,7 +179,7 @@ class ScheduleCog(commands.Cog):
                 await try_delete(ctx.message)
                 schedule = await Schedule.from_id(int(id), int(ctx.guild.id))
 
-                result = schedule.change(ctx, schedule.description, desc)
+                result = await schedule.change(ctx, schedule.description, desc)
                 if result:
                     ch = await getChannel(self.bot, ctx.guild)
                     message = await ch.fetch_message(schedule.msgId)
@@ -216,14 +216,14 @@ class ScheduleCog(commands.Cog):
                     if convertedDateTime < now:
                         return await ctx.send("You have just tried to update this event to a point in the past. Which is not possible.\nCheck that your date is in a ``DD/MM/YYYY format``, for example ``23/08/2019``")
 
-                    result = schedule.change(ctx, schedule.dateTime.strftime('%d/%m/%Y'), date)
+                    result = await schedule.change(ctx, schedule.dateTime.strftime('%d/%m/%Y'), date)
                     if result:
                         ch = await getChannel(self.bot, ctx.guild)
                         message = await ch.fetch_message(schedule.msgId)
                         embed = message.embeds[0]
                         embed.remove_field(1)
                         unix = time.mktime(convertedDateTime.timetuple())
-                        embed.insert_field_at(1, name="When?", value=f"<t:{unix.removesuffix('.0')}>", inline=False)
+                        embed.insert_field_at(1, name="When?", value=f"<t:{str(unix).removesuffix('.0')}>", inline=False)
 
                         await message.edit(embed=embed)
                         schedule.dateTime = convertedDateTime
@@ -255,14 +255,14 @@ class ScheduleCog(commands.Cog):
                     schedule = await Schedule.from_id(int(id), int(ctx.guild.id))
                     convertedDateTime = await convertDateAndTimeToDateTime(schedule.dateTime.strftime('%d/%m/%Y'), time)
 
-                    result = schedule.change(ctx, schedule.dateTime.strftime('%H%M'), time)
+                    result = await schedule.change(ctx, schedule.dateTime.strftime('%H%M'), time)
                     if result:
                         ch = await getChannel(self.bot, ctx.guild)
                         message = await ch.fetch_message(schedule.msgId)
                         embed = message.embeds[0]
                         embed.remove_field(1)
                         unix = time.mktime(convertedDateTime.timetuple())
-                        embed.insert_field_at(1, name="When?", value=f"<t:{unix.removesuffix('.0')}>", inline=False)
+                        embed.insert_field_at(1, name="When?", value=f"<t:{str(unix).removesuffix('.0')}>", inline=False)
 
                         await message.edit(embed=embed)
                         schedule.dateTime = convertedDateTime
@@ -492,7 +492,7 @@ class ScheduleCog(commands.Cog):
         embed.description = f"{schedule.description}"
         embed.add_field(name="Hosted by", value=f"{schedule.author}", inline=False)
         unix = time.mktime(schedule.dateTime.timetuple())
-        embed.insert_field_at(1, name="When?", value=f"<t:{unix.removesuffix('.0')}>", inline=False)
+        embed.insert_field_at(1, name="When?", value=f"<t:{str(unix).removesuffix('.0')}>", inline=False)
 
         users = await self.bot.mdb['scheduleSignUp'].find({'id': schedule.id}).to_list(length=None)
         accepted = []
