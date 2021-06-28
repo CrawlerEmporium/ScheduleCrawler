@@ -2,6 +2,7 @@ import asyncio
 import re
 import typing
 import discord
+import time
 
 from datetime import datetime
 from discord.ext import commands
@@ -215,17 +216,14 @@ class ScheduleCog(commands.Cog):
                     if convertedDateTime < now:
                         return await ctx.send("You have just tried to update this event to a point in the past. Which is not possible.\nCheck that your date is in a ``DD/MM/YYYY format``, for example ``23/08/2019``")
 
-                    day, month, year = await getYMD(convertedDateTime)
-                    daySuffix = getDateSuffix(day)
-                    time = convertedDateTime.strftime('%H:%M')
-
                     result = schedule.change(ctx, schedule.dateTime.strftime('%d/%m/%Y'), date)
                     if result:
                         ch = await getChannel(self.bot, ctx.guild)
                         message = await ch.fetch_message(schedule.msgId)
                         embed = message.embeds[0]
                         embed.remove_field(1)
-                        embed.insert_field_at(1, name="When? (UTC)", value=f"{month} {day}{daySuffix}, {year} {time}", inline=False)
+                        unix = time.mktime(convertedDateTime.timetuple())
+                        embed.insert_field_at(1, name="When?", value=f"<t:{unix}>", inline=False)
 
                         await message.edit(embed=embed)
                         schedule.dateTime = convertedDateTime
@@ -257,17 +255,14 @@ class ScheduleCog(commands.Cog):
                     schedule = await Schedule.from_id(int(id), int(ctx.guild.id))
                     convertedDateTime = await convertDateAndTimeToDateTime(schedule.dateTime.strftime('%d/%m/%Y'), time)
 
-                    day, month, year = await getYMD(convertedDateTime)
-                    daySuffix = getDateSuffix(day)
-                    newTime = convertedDateTime.strftime('%H:%M')
-
-                    result = schedule.change(ctx, schedule.dateTime.strftime('%H%M'), newTime)
+                    result = schedule.change(ctx, schedule.dateTime.strftime('%H%M'), time)
                     if result:
                         ch = await getChannel(self.bot, ctx.guild)
                         message = await ch.fetch_message(schedule.msgId)
                         embed = message.embeds[0]
                         embed.remove_field(1)
-                        embed.insert_field_at(1, name="When? (UTC)", value=f"{month} {day}{daySuffix}, {year} {newTime}", inline=False)
+                        unix = time.mktime(convertedDateTime.timetuple())
+                        embed.insert_field_at(1, name="When?", value=f"<t:{unix}>", inline=False)
 
                         await message.edit(embed=embed)
                         schedule.dateTime = convertedDateTime
@@ -496,10 +491,8 @@ class ScheduleCog(commands.Cog):
         embed.title = f"{schedule.title}"
         embed.description = f"{schedule.description}"
         embed.add_field(name="Hosted by", value=f"{schedule.author}", inline=False)
-        day, month, year = await getYMD(schedule.dateTime)
-        daySuffix = getDateSuffix(day)
-        time = schedule.dateTime.strftime('%H:%M')
-        embed.add_field(name="When? (UTC)", value=f"{month} {day}{daySuffix}, {year} {time}", inline=False)
+        unix = time.mktime(schedule.dateTime.timetuple())
+        embed.insert_field_at(1, name="When?", value=f"<t:{unix}>", inline=False)
 
         users = await self.bot.mdb['scheduleSignUp'].find({'id': schedule.id}).to_list(length=None)
         accepted = []
