@@ -1,9 +1,9 @@
 import asyncio
 import re
-import random
 import typing
-
 import discord
+
+from datetime import datetime
 from discord.ext import commands
 from discord_components import Button, ButtonStyle
 from crawler_utilities.utils.confirmation import BotConfirmation
@@ -82,6 +82,10 @@ class ScheduleCog(commands.Cog):
                 return await ctx.reply("Make sure your time is in a HHMM format")
 
             convertedDateTime = await convertDateAndTimeToDateTime(match.group(3), match.group(4))
+            now = datetime.utcnow()
+            if convertedDateTime < now:
+                return await ctx.send("You have just tried to create an event in the past. Which is not possible.\nCheck that your date is in a ``DD/MM/YYYY format``, for example ``23/08/2019``")
+
             id = await get_next_num(self.bot.mdb['properties'], 'id')
             schedule = Schedule(int(id), -1, ctx.guild.id, ctx.message.author.display_name, match.group(1), match.group(2), False, convertedDateTime)
 
@@ -207,6 +211,9 @@ class ScheduleCog(commands.Cog):
                     schedule = await Schedule.from_id(int(id), int(ctx.guild.id))
 
                     convertedDateTime = await convertDateAndTimeToDateTime(date, schedule.dateTime.strftime('%H%M'))
+                    now = datetime.utcnow()
+                    if convertedDateTime < now:
+                        return await ctx.send("You have just tried to update this event to a point in the past. Which is not possible.\nCheck that your date is in a ``DD/MM/YYYY format``, for example ``23/08/2019``")
 
                     day, month, year = await getYMD(convertedDateTime)
                     daySuffix = getDateSuffix(day)
@@ -464,6 +471,9 @@ class ScheduleCog(commands.Cog):
     async def sendScheduleEmbed(self, ctx, schedule, date, time):
         try:
             convertedDateTime = await convertDateAndTimeToDateTime(date, time)
+            now = datetime.utcnow()
+            if convertedDateTime < now:
+                return await ctx.send("You have just tried to create an event in the past. Which is not possible.\nCheck that your date is in a ``DD/MM/YYYY format``, for example ``23/08/2019``")
             id = await get_next_num(self.bot.mdb['properties'], 'id')
             schedule.id = int(id)
             schedule.dateTime = convertedDateTime
