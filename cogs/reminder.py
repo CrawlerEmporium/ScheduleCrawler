@@ -4,6 +4,7 @@ import utils.globals as GG
 
 from discord.ext import commands
 from crawler_utilities.handlers import logger
+from crawler_utilities.utils.embeds import EmbedWithAuthor
 from utils.reminder.reminder import Reminder
 from utils.reminder.utils import find_reminder_time, get_datetime_string
 
@@ -30,7 +31,7 @@ class ReminderCog(commands.Cog):
 
         log.info(f"Reminder created for {reminder.message} by {reminder.authorId} on {get_datetime_string(reminder.target_date)}")
         bldr = await reminder.render_message_confirmation(self.bot, result_message)
-        embed = GG.EmbedWithAuthor(ctx)
+        embed = EmbedWithAuthor(ctx)
         embed.description = ''.join(bldr)
         await ctx.send(embed=embed)
 
