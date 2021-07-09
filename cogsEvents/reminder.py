@@ -47,7 +47,7 @@ async def ReminderCycler(bot):
             tb = discord_trim(e)
             for x in tb:
                 await errorLogging.send(x)
-            await asyncio.sleep(60)
+        await asyncio.sleep(60)
 
 
 def setup(bot):
