@@ -86,7 +86,7 @@ class Info(commands.Cog):
 
         Forgot the prefix? Reset it with "@5eCrawler#2771 prefix !".
         """
-        await try_delete(ctx)
+        await try_delete(ctx.message)
         guild_id = str(ctx.guild.id)
         if prefix is None:
             current_prefix = await self.bot.get_server_prefix(ctx.message)
