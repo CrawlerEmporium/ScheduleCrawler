@@ -42,10 +42,11 @@ def admin_or_permissions(**perms):
 def is_coordinator():
     async def predicate(ctx):
         server = await ctx.bot.mdb['init'].find_one({"guildId": ctx.message.guild.id})
-        roleId = server['channelId']
+        roleId = server['roleId']
         try:
+            role = await ctx.bot.get_role(int(roleId))
             if ctx.author.roles is not None:
-                if roleId in ctx.author.roles:
+                if role in ctx.author.roles:
                     return True
 
             if ctx.author.id == ctx.guild.owner_id:
