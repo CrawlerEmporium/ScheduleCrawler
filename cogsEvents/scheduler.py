@@ -24,7 +24,7 @@ async def loadScheduler(bot):
                     nowM = (int(now.strftime('%H')) * 60) + int(now.strftime('%M'))
                     dateM = (int(dateTime.strftime('%H')) * 60) + int(dateTime.strftime('%M'))
                     if abs(nowM - dateM) <= 5:
-                        channel = await bot.mdb['channels'].find_one({"guildId": schedule.guildId})
+                        channel = await bot.mdb['init'].find_one({"guildId": schedule.guildId})
                         ch = bot.get_channel(int(channel['channelId']))
                         accepted = []
                         tentatived = []
