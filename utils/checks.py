@@ -44,7 +44,7 @@ def is_coordinator():
         server = await ctx.bot.mdb['init'].find_one({"guildId": ctx.message.guild.id})
         roleId = server['roleId']
         try:
-            role = await ctx.bot.get_role(int(roleId))
+            role = await ctx.message.guild.get_role(int(roleId))
             if ctx.author.roles is not None:
                 if role in ctx.author.roles:
                     return True
