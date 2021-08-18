@@ -74,21 +74,21 @@ class ScheduleCog(commands.Cog):
                                "If you instead want to follow a wizard that leads you through step-by-step, use ``%schedule create``")
                 return
 
-            dateMatch = re.match(r'(([0-9]{2})\/([0-9]{2})\/([0-9]{4}))', match.group(3))
+            dateMatch = re.match(r'(([0-9]{2})/([0-9]{2})/([0-9]{4}))', match.group(2))
             if dateMatch is not None:
                 return await ctx.reply("Make sure your date is in the DD/MM/YYYY format")
 
-            timeMatch = re.match(r'([0-9]{4})', match.group(4))
+            timeMatch = re.match(r'([0-9]{4})', match.group(3))
             if timeMatch is not None:
                 return await ctx.reply("Make sure your time is in a HHMM format")
 
-            convertedDateTime = await convertDateAndTimeToDateTime(match.group(3), match.group(4))
+            convertedDateTime = await convertDateAndTimeToDateTime(match.group(2), match.group(3))
             now = datetime.utcnow()
             if convertedDateTime < now:
                 return await ctx.send("You have just tried to create an event in the past. Which is not possible.\nCheck that your date is in a ``DD/MM/YYYY format``, for example ``23/08/2019``")
 
             id = await get_next_num(self.bot.mdb['properties'], 'id')
-            schedule = Schedule(int(id), -1, ctx.guild.id, ctx.message.author.display_name, match.group(1), match.group(2), False, convertedDateTime)
+            schedule = Schedule(int(id), -1, ctx.guild.id, ctx.message.author.display_name, match.group(0), match.group(1), False, convertedDateTime)
 
             embed, components = await self.createScheduleEmbed(schedule)
             channel = await getChannel(self.bot, ctx.message.guild)
