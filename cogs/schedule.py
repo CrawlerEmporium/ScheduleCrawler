@@ -2,20 +2,23 @@ import asyncio
 import re
 import typing
 import discord
-import time
 
 from datetime import datetime, timezone
+
+from discord import ButtonStyle
 from discord.ext import commands
-from discord_components import Button, ButtonStyle
+from discord.ui import Button
+
 from crawler_utilities.utils.confirmation import BotConfirmation
 
 from crawler_utilities.utils.functions import get_next_num, try_delete
 from models.schedule import Schedule, ScheduleState, ScheduleException
-from crawler_utilities.handlers import logger
 from utils import checks
-from utils.functions import getDateSuffix, getChannel, getYMD, convertDateAndTimeToDateTime
+from utils.functions import getChannel, convertDateAndTimeToDateTime
 
-log = logger.logger
+from utils import globals as GG
+
+log = GG.log
 
 
 class ScheduleCog(commands.Cog):
@@ -542,7 +545,7 @@ class ScheduleCog(commands.Cog):
 
         components = [[Button(label="Accept", style=ButtonStyle.green, custom_id=f"schedule_accept {schedule.id}"),
                        Button(label="Decline", style=ButtonStyle.red, custom_id=f"schedule_decline {schedule.id}"),
-                       Button(label="Tentative", style=ButtonStyle.blue, custom_id=f"schedule_tentative {schedule.id}")]]
+                       Button(label="Tentative", style=ButtonStyle.primary, custom_id=f"schedule_tentative {schedule.id}")]]
 
         return embed, components
 

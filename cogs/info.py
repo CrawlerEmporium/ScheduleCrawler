@@ -1,16 +1,17 @@
 import datetime
 import discord
 import time
+from discord import ButtonStyle
 
 from discord.ext import commands
-from discord_components import ButtonStyle, Button
+from discord.ui import Button
 
-from crawler_utilities.handlers import logger
 from crawler_utilities.utils.embeds import EmbedWithAuthor
 from crawler_utilities.utils.functions import try_delete
 from utils import checks
+from utils import globals as GG
 
-log = logger.logger
+log = GG.log
 
 def checkDays(date):
     now = date.fromtimestamp(time.time())
@@ -29,7 +30,7 @@ class Info(commands.Cog):
         """Shows info about bot"""
         em = discord.Embed(color=discord.Color.green(), description="ScheduleCrawler, a bot for scheduling events and other cool stuff.")
         em.title = 'Bot Info'
-        em.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
+        em.set_author(name=ctx.author.name, icon_url=ctx.author.display_avatar.url)
         em.add_field(name="Servers", value=str(len(ctx.bot.guilds)))
         total_members = sum(len(s.members) for s in self.bot.guilds)
         unique_members = set(self.bot.get_all_members())
@@ -52,10 +53,10 @@ class Info(commands.Cog):
         serverEmoji = self.bot.get_emoji(int("<:5e:603932658820448267>".split(":")[2].replace(">", "")))
         patreonEmoji = self.bot.get_emoji(int("<:Patreon:855754853153505280>".split(":")[2].replace(">", "")))
         kofiEmoji = self.bot.get_emoji(int("<:Kofi:855758703772958751>".split(":")[2].replace(">", "")))
-        components = [[Button(label="Discord", style=ButtonStyle.URL, emoji=serverEmoji, url="https://discord.gg/HEY6BWj"),
-                       Button(label="Website", style=ButtonStyle.URL, url="https://www.crawleremporium.com"),
-                       Button(label="Patreon", style=ButtonStyle.URL, emoji=patreonEmoji, url="https://www.patreon.com/LordDusk"),
-                       Button(label="Buy me a coffee", style=ButtonStyle.URL, emoji=kofiEmoji, url="https://ko-fi.com/5ecrawler")]]
+        components = [[Button(label="Discord", style=ButtonStyle.url, emoji=serverEmoji, url="https://discord.gg/HEY6BWj"),
+                       Button(label="Website", style=ButtonStyle.url, url="https://www.crawleremporium.com"),
+                       Button(label="Patreon", style=ButtonStyle.url, emoji=patreonEmoji, url="https://www.patreon.com/LordDusk"),
+                       Button(label="Buy me a coffee", style=ButtonStyle.url, emoji=kofiEmoji, url="https://ko-fi.com/5ecrawler")]]
         await ctx.send(embed=em, components=components)
 
     @commands.command()

@@ -1,14 +1,16 @@
 import typing
 import discord
-import utils.globals as GG
+from discord import message_command
 
 from discord.ext import commands
-from crawler_utilities.handlers import logger
 from crawler_utilities.utils.embeds import EmbedWithAuthor
+from dropdowns.Reminder import ReminderView
 from utils.reminder.reminder import Reminder
 from utils.reminder.utils import find_reminder_time, get_datetime_string
 
-log = logger.logger
+from utils import globals as GG
+
+log = GG.log
 
 
 class ReminderCog(commands.Cog):
@@ -34,6 +36,10 @@ class ReminderCog(commands.Cog):
         embed = EmbedWithAuthor(ctx)
         embed.description = ''.join(bldr)
         await ctx.send(embed=embed)
+
+    @message_command(name="Remind me")
+    async def remindme_message(self, ctx: discord.ApplicationContext, message: discord.Message):
+        await ctx.respond("When do you want to be reminded?", view=ReminderView(ctx.bot, message), ephemeral=True)
 
 
 def setup(bot):

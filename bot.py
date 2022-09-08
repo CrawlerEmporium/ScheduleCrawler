@@ -1,22 +1,21 @@
 import discord
 import motor.motor_asyncio
-import utils.globals as GG
 
 from os import listdir
 from os.path import isfile, join
-
 from discord.ext import commands
-from discord_components import DiscordComponents
-from crawler_utilities.handlers import logger, Help
+from utils import globals as GG
+
+log = GG.log
 
 MDB = motor.motor_asyncio.AsyncIOMotorClient(GG.MONGODB)['schedulecrawler']
 
-log = logger.logger
-
 SHARD_COUNT = 1
-TESTING = False
+TESTING = True
 defaultPrefix = GG.PREFIX if not TESTING else '*'
-intents = discord.Intents().all()
+intents = discord.Intents().default()
+intents.members = True
+intents.message_content = True
 
 
 async def get_prefix(bot, message):
@@ -36,8 +35,8 @@ async def get_prefix(bot, message):
 
 
 class Crawler(commands.AutoShardedBot):
-    def __init__(self, prefix, help_command=None, description=None, **options):
-        super(Crawler, self).__init__(prefix, help_command, description, **options)
+    def __init__(self, prefix, help_command=None, **options):
+        super(Crawler, self).__init__(prefix, help_command, **options)
         self.owner = None
         self.testing = TESTING
         self.state = "init"
@@ -67,20 +66,19 @@ class Crawler(commands.AutoShardedBot):
 
 bot = Crawler(prefix=get_prefix, intents=intents, case_insensitive=True, status=discord.Status.idle,
               description="A bot.", shard_count=SHARD_COUNT, testing=TESTING,
-              activity=discord.Game(f"%help | Initializing..."),
-              help_command=Help("schedule"))
+              activity=discord.Game(f"%help | Initializing..."))
 
 
 @bot.event
 async def on_ready():
     bot.version = "1.0.1"
-    DiscordComponents(bot)
-    await bot.change_presence(activity=discord.Game(f"with {len(bot.guilds)} servers | %help | v{bot.version}"), afk=True)
+    await bot.change_presence(activity=discord.Game(f"with {len(bot.guilds)} servers | %help | v{bot.version}"))
     print(f"Logged in as {bot.user.name} ({bot.user.id})")
 
 
 @bot.event
 async def on_connect():
+    await bot.sync_commands(force=True)
     bot.owner = await bot.fetch_user(GG.OWNER)
     print(f"OWNER: {bot.owner.name}")
 

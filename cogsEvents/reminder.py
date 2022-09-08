@@ -33,11 +33,11 @@ async def ReminderCycler(bot):
                         user = await guild.fetch_member(reminder.authorId)
 
                         embed = discord.Embed()
-                        embed.set_author(name=user.display_name, icon_url=user.avatar_url)
+                        embed.set_author(name=user.display_name, icon_url=user.display_avatar.url)
                         embed.colour = random.randint(0, 0xffffff)
                         embed.description = ''.join(bldr)
                         embed.title = f"Reminder here for {str(user)}!"
-                        await channel.send(content=user.mention, embed=embed)
+                        await user.send(content=user.mention, embed=embed)
 
                         reminder.reminded = True
                         await GG.MDB['reminders'].replace_one({"_id": _id}, reminder.to_dict())

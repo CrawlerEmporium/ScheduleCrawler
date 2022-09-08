@@ -1,14 +1,11 @@
-import asyncio
 import os
 import subprocess
 import inspect
-import discord
 
-import utils.globals as GG
 from discord.ext import commands
-from crawler_utilities.handlers import logger
+from utils import globals as GG
 
-log = logger.logger
+log = GG.log
 
 extensions = [x.replace('.py', '') for x in os.listdir(GG.COGS) if x.endswith('.py')]
 path = GG.COGS + '.'
