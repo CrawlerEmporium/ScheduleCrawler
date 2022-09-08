@@ -4,11 +4,10 @@ import random
 import utils.globals as GG
 
 from datetime import datetime
-from crawler_utilities.handlers import logger
 from crawler_utilities.utils.functions import discord_trim
 from utils.reminder.reminder import Reminder
 
-log = logger.logger
+log = GG.log
 
 
 async def ReminderCycler(bot):

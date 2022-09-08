@@ -95,6 +95,7 @@ def loadCogs():
         try:
             bot.load_extension(GG.COGS + "." + extension)
         except Exception as e:
+            print(e)
             log.error(f'Failed to load extension {extension}')
             i += 1
     log.info("-------------------")
@@ -103,6 +104,7 @@ def loadCogs():
         try:
             bot.load_extension("cogsEvents" + "." + extension)
         except Exception as e:
+            print(e)
             log.error(f'Failed to load extension {extension}')
             i += 1
     log.info("-------------------")
@@ -110,7 +112,7 @@ def loadCogs():
 
 
 def loadCrawlerUtilitiesCogs():
-    cu_event_extensions = ["cmdLog", "errors", "joinLeave"]
+    cu_event_extensions = ["errors", "joinLeave"]
     cu_event_folder = "crawler_utilities.events"
     cu_cogs_extensions = ["flare"]
     cu_cogs_folder = "crawler_utilities.cogs"
@@ -121,6 +123,7 @@ def loadCrawlerUtilitiesCogs():
         try:
             bot.load_extension(f"{cu_cogs_folder}.{extension}")
         except Exception as e:
+            print(e)
             log.error(f'Failed to load extension {extension}')
             i += 1
     log.info("-------------------")
@@ -129,6 +132,7 @@ def loadCrawlerUtilitiesCogs():
         try:
             bot.load_extension(f"{cu_event_folder}.{extension}")
         except Exception as e:
+            print(e)
             log.error(f'Failed to load extension {extension}')
             i += 1
     log.info("-------------------")

@@ -1,7 +1,8 @@
-from crawler_utilities.handlers import logger
 from utils.reminder.utils import *
 
-log = logger.logger
+import utils.globals as GG
+
+log = GG.log
 
 
 class Reminder:

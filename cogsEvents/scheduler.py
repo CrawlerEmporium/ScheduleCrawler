@@ -5,10 +5,10 @@ from datetime import datetime
 
 from crawler_utilities.utils.functions import discord_trim
 
-from crawler_utilities.handlers import logger
+import utils.globals as GG
 from models.schedule import Schedule
 
-log = logger.logger
+log = GG.log
 
 
 async def loadScheduler(bot):
