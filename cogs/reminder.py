@@ -1,6 +1,7 @@
+import datetime
 import typing
 import discord
-from discord import message_command
+from discord import message_command, Option, slash_command
 
 from discord.ext import commands
 from crawler_utilities.utils.embeds import EmbedWithAuthor
@@ -17,25 +18,22 @@ class ReminderCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command()
-    async def remindme(self, ctx, message: typing.Optional[discord.Message] = None, *, remindText):
-        if message is not None:
-            message = message.id
-        await ctx.message.delete()
-        timeString = find_reminder_time(remindText)
-        dateTimeString = ctx.message.created_at
-        reminder, result_message = Reminder.build_reminder(message, ctx.channel.id, ctx.guild.id, ctx.author.id, dateTimeString, timeString)
+    @slash_command(name="remindme")
+    async def remindme(self, ctx, reminder: Option(str, "When do you want to be reminded?")):
+        timeString = find_reminder_time(reminder)
+        dateTimeString = datetime.datetime.utcnow()
+        reminder, result_message = Reminder.build_reminder(None, ctx.interaction.channel_id, ctx.interaction.guild_id, ctx.interaction.user.id, dateTimeString, timeString)
         if reminder is None:
             log.debug("Reminder not valid, returning")
-            return await ctx.send(result_message)
+            return await ctx.respond(result_message)
 
         await GG.MDB['reminders'].update_one({"requested_date": reminder.requested_date, "authorId": reminder.authorId}, {"$set": reminder.to_dict()}, upsert=True)
 
-        log.info(f"Reminder created for {reminder.message} by {reminder.authorId} on {get_datetime_string(reminder.target_date)}")
+        log.info(f"Reminder created by {reminder.authorId} on {get_datetime_string(reminder.target_date)}")
         bldr = await reminder.render_message_confirmation(self.bot, result_message)
         embed = EmbedWithAuthor(ctx)
         embed.description = ''.join(bldr)
-        await ctx.send(embed=embed)
+        await ctx.respond(embed=embed)
 
     @message_command(name="Remind me")
     async def remindme_message(self, ctx: discord.ApplicationContext, message: discord.Message):

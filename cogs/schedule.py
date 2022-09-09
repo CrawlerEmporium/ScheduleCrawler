@@ -27,36 +27,39 @@ class ScheduleCog(commands.Cog):
 
     # listeners
     @commands.Cog.listener()
-    async def on_button_click(self, res):
+    async def on_interaction(self, res):
         member = await res.guild.fetch_member(res.user.id)
         scheduleId = -1
         if member is not None:
             update = False
-
+            what = "None"
             if res.custom_id.startswith("schedule_accept"):
                 scheduleId = int(res.custom_id.split("schedule_accept ")[1])
                 schedule = await Schedule.from_id(int(scheduleId), res.guild.id)
                 await schedule.accept(res.user)
+                what = "Accepted"
                 update = True
 
             if res.custom_id.startswith("schedule_decline"):
                 scheduleId = int(res.custom_id.split("schedule_decline ")[1])
                 schedule = await Schedule.from_id(int(scheduleId), res.guild.id)
                 await schedule.deny(res.user)
+                what = "Declined"
                 update = True
 
             if res.custom_id.startswith("schedule_tentative"):
                 scheduleId = int(res.custom_id.split("schedule_tentative ")[1])
                 schedule = await Schedule.from_id(int(scheduleId), res.guild.id)
                 await schedule.tentative(res.user)
+                what = "Tentative"
                 update = True
 
             if update:
-                embed, components = await self.createScheduleEmbed(schedule)
+                embed, view = await self.createScheduleEmbed(schedule)
                 channel = await getChannel(self.bot, res.guild)
                 message = await channel.fetch_message(schedule.msgId)
-                await message.edit(embed=embed, components=components)
-                await res.respond(type=6)
+                await message.edit(embed=embed, view=view)
+                await res.response.send_message(f"Thank you for showing your interest. For schedule {schedule.id}, you are currently marked as {what}", ephemeral=True)
                 update = False
 
     # commands
@@ -93,9 +96,9 @@ class ScheduleCog(commands.Cog):
             id = await get_next_num(self.bot.mdb['properties'], 'id')
             schedule = Schedule(int(id), -1, ctx.guild.id, ctx.message.author.display_name, match.group(0), match.group(1), False, convertedDateTime)
 
-            embed, components = await self.createScheduleEmbed(schedule)
+            embed, view = await self.createScheduleEmbed(schedule)
             channel = await getChannel(self.bot, ctx.message.guild)
-            msg = await channel.send(embed=embed, components=components)
+            msg = await channel.send(embed=embed, view=view)
             schedule.msgId = msg.id
             upsert = True
 
@@ -478,9 +481,9 @@ class ScheduleCog(commands.Cog):
             schedule.id = int(id)
             schedule.dateTime = str(convertedDateTime)
 
-            embed, components = await self.createScheduleEmbed(schedule)
+            embed, view = await self.createScheduleEmbed(schedule)
             channel = await getChannel(self.bot, ctx.message.guild)
-            msg = await channel.send(embed=embed, components=components)
+            msg = await channel.send(embed=embed, view=view)
             schedule.msgId = msg.id
             upsert = True
 
@@ -543,11 +546,12 @@ class ScheduleCog(commands.Cog):
         embed.set_footer(text=f"Id: {schedule.id} • When? (local time)")
         embed.timestamp = DT
 
-        components = [[Button(label="Accept", style=ButtonStyle.green, custom_id=f"schedule_accept {schedule.id}"),
-                       Button(label="Decline", style=ButtonStyle.red, custom_id=f"schedule_decline {schedule.id}"),
-                       Button(label="Tentative", style=ButtonStyle.primary, custom_id=f"schedule_tentative {schedule.id}")]]
+        view = discord.ui.View()
+        view.add_item(Button(label="Accept", style=ButtonStyle.green, custom_id=f"schedule_accept {schedule.id}"))
+        view.add_item(Button(label="Decline", style=ButtonStyle.red, custom_id=f"schedule_decline {schedule.id}"))
+        view.add_item(Button(label="Tentative", style=ButtonStyle.primary, custom_id=f"schedule_tentative {schedule.id}"))
 
-        return embed, components
+        return embed, view
 
 
 def setup(bot):

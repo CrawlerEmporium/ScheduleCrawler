@@ -30,7 +30,8 @@ class Reminder:
         time_string = time_string.strip() if time_string is not None else None
         if target_date is None:
             if time_string is not None:
-                requested_date = pytz.UTC.localize(requested_date)
+                local_tz = pytz.timezone('UTC')
+                requested_date = requested_date.replace(tzinfo=pytz.utc).astimezone(local_tz)
                 target_date = parse_time(time_string, requested_date)
                 log.debug(f"Target date: {get_datetime_string(target_date)}")
 
