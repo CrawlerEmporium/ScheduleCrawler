@@ -1,18 +1,15 @@
 import motor.motor_asyncio
-from environs import Env
+import os
 from crawler_utilities.handlers.logger import Logger
 
 log = Logger("logs", "ScheduleCrawler", "ScheduleCrawler").logger
 
-env = Env()
-env.read_env()
-
-PREFIX = env('PREFIX')
-TOKEN = env('TOKEN')
-COGS = env('COGS')
-COGSEVENTS = env('COGSEVENTS')
-OWNER = int(env('OWNER'))
-MONGODB = env('MONGODB')
+PREFIX = os.environ['PREFIX']
+TOKEN = os.environ['TOKEN']
+COGS = os.environ['COGS']
+COGSEVENTS = os.environ['COGSEVENTS']
+OWNER = int(os.environ['OWNER'])
+MONGODB = os.environ['MONGODB']
 
 BOT = 856591849825239090
 PM_TRUE = True
